@@ -3,7 +3,7 @@
 Aplicación sencilla para gestionar tareas: agregar, editar, eliminar y contar tareas.
 
 
-Características
+**Características**
 
 Agregar tareas: Permite añadir tareas a la lista.
 
@@ -16,7 +16,7 @@ Editar tareas: Permite modificar el contenido de las tareas existentes.
 Contar tareas: Permite conocer sobre el número de tareas que hay.
 
 
-Tecnologías
+**Tecnologías**
 
 Java
 
