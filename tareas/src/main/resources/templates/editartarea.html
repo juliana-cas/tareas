@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar tarea</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f0f8; /* Color de fondo suave */
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">Editar tarea</h1>
+
+    <div id="error" class="alert alert-danger" role="alert" style="display: none;"></div>
+
+    <form id="editarTareaForm">
+        <input type="hidden" id="tareaId">
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <input type="text" class="form-control" id="descripcion" required pattern="^(?!\s*$)[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$" title="No se permiten espacios vacíos y solo se permiten letras y espacios">
+        </div>
+        <button type="submit" class="btn btn-primary">Actualizar</button>
+        <a href="/" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Obtener el ID de la tarea desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tareaId = urlParams.get('id');
+
+        // Cargar la tarea para editar
+        $.get(`/api/tareas/${tareaId}`, function(tarea) {
+            $('#tareaId').val(tarea.id);
+            $('#descripcion').val(tarea.descripcion);
+        }).fail(function() {
+            $('#error').text('Error al cargar la tarea.').show();
+        });
+
+        // Manejar el envío del formulario
+        $('#editarTareaForm').submit(function(event) {
+            event.preventDefault();
+            const descripcion = $('#descripcion').val();
+
+            $.ajax({
+                url: `/api/tareas/${tareaId}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ descripcion: descripcion }),
+                success: function(response) {
+                    window.location.href = '/'; // Redirigir a la lista de tareas después de actualizar
+                },
+                error: function(xhr) {
+                    $('#error').text(xhr.responseText).show(); // Mostrar mensaje de error
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

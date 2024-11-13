@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de tareas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f0f8; /* Color de fondo suave */
+        }
+        .table {
+            background-color: #fff3f9; /* Color de fondo de la tabla */
+        }
+        .btn-primary {
+            background-color: #d81b60; /* Color rosado para el botón de agregar */
+            border-color: #d81b60;
+        }
+        .btn-danger {
+            background-color: #e57373; /* Color rosado claro para el botón de eliminar */
+            border-color: #e57373;
+        }
+        .btn-warning {
+            background-color: #ffb74d; /* Color amarillo para el botón de editar */
+            border-color: #ffb74d;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">Lista de tareas</h1>
+
+    <div id="error" class="alert alert-danger" role="alert" style="display: none;"></div>
+
+    <form id="tareaForm" class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Nueva tarea" id="descripcion" required pattern="^(?!\s*$)[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$" title="No se permiten espacios vacíos y solo se permiten letras y espacios">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-bordered" id="tareasTable">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Las tareas se llenarán aquí mediante JavaScript -->
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Función para cargar las tareas
+        function cargarTareas() {
+            $.get("/api/tareas", function(tareas) {
+                let filas = '';
+                tareas.forEach(tarea => {
+                    filas += `
+                        <tr>
+                            <td>${tarea.id}</td>
+                            <td>${tarea.descripcion}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editarTarea(${tarea.id}, '${tarea.descripcion}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarTarea(${tarea.id})">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                $('#tareasTable tbody').html(filas);
+            });
+        }
+
+        // Cargar tareas al inicio
+        cargarTareas();
+
+        // Agregar tarea
+        $('#tareaForm').submit(function(event) {
+            event.preventDefault();
+            const descripcion = $('#descripcion').val();
+
+            $.ajax({
+                url: '/api/tareas',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ descripcion: descripcion }),
+                success: function(response) {
+                    $('#descripcion').val(''); // Limpiar el campo
+                    cargarTareas(); // Recargar tareas
+                    $('#error').hide(); // Ocultar mensaje de error
+                },
+                error : function(xhr) {
+                    $('#error').text(xhr.responseText).show(); // Mostrar mensaje de error
+                }
+            });
+        });
+    });
+
+    // Función para eliminar tarea
+    function eliminarTarea(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
+            $.ajax({
+                url: `/api/tareas/${id}`,
+                type: 'DELETE',
+                success: function(response) {
+                    cargarTareas(); // Recargar tareas
+                    $('#error').hide(); // Ocultar mensaje de error
+                },
+                error: function(xhr) {
+                    $('#error').text(xhr.responseText).show(); // Mostrar mensaje de error
+                }
+            });
+        }
+    }
+
+    // Función para editar tarea
+    function editarTarea(id, descripcion) {
+        const nuevaDescripcion = prompt('Editar tarea:', descripcion);
+        if (nuevaDescripcion && nuevaDescripcion.match(/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/)) {
+            $.ajax({
+                url: `/api/tareas/${id}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ descripcion: nuevaDescripcion }),
+                success: function(response) {
+                    cargarTareas(); // Recargar tareas
+                    $('#error').hide(); // Ocultar mensaje de error
+                },
+                error: function(xhr) {
+                    $('#error').text(xhr.responseText).show(); // Mostrar mensaje de error
+                }
+            });
+        } else if (nuevaDescripcion) {
+            alert('La descripción solo puede contener letras.');
+        }
+    }
+</script>
+</body>
+</html>
